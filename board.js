@@ -320,7 +320,7 @@
   function render() {
     if (!state.week && !state.season) {
       if (state.error === 'signedout') return renderMessage('Sign in to <em>SGT</em>', ['This screen is signed out of Simulator Golf Tour.', 'Sign in at simulatorgolftour.com/login, then reopen the board.']);
-      if (state.error) return renderMessage('Leaderboard <em>Loading</em>', ['Can’t reach SGT right now — retrying every minute.']);
+      if (state.error) return renderMessage('Leaderboard <em>Loading</em>', ['Can’t reach SGT right now — retrying every minute.', '(' + state.error + ')']);
       return renderMessage('Leaderboard <em>Loading</em>', ['Pulling the latest scores from SGT…']);
     }
     views.msg.style.display = 'none';
@@ -352,6 +352,12 @@
   // ---------- boot ----------
   function boot() {
     mount();
+    if (!/(^|\.)simulatorgolftour\.com$/i.test(location.hostname)) {
+      // the board needs SGT's own site (and its login) to read scores — send the viewer there
+      renderMessage('Open on <em>SGT</em>', ['The board runs on the SGT site with your SGT login.', 'Taking you there now — then click BC Live Board again.']);
+      setTimeout(function () { location.href = 'https://simulatorgolftour.com/tour/3766#bclive'; }, 3500);
+      return;
+    }
     renderMessage('Leaderboard <em>Loading</em>', ['Pulling the latest scores from SGT…']);
     fetch(BASE + 'league.json?_=' + now(), { cache: 'no-store' })
       .then(function (r) { return r.json(); })
