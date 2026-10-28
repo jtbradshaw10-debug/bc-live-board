@@ -1,0 +1,1 @@
+if(/bclive/i.test(location.hash)&&!window.__bcLiveLoader){window.__bcLiveLoader=1;var s=document.createElement('script');s.src='https://jtbradshaw10-debug.github.io/bc-live-board/board.js?v='+Math.floor(Date.now()/36e5);document.documentElement.appendChild(s);}

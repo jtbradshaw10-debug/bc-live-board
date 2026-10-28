@@ -1,0 +1,291 @@
+{
+ "name": "Fall Scramble League",
+ "season": "Fall 2026",
+ "weeks": 9,
+ "tourId": 3766,
+ "rotate": {
+  "weekSeconds": 30,
+  "seasonSeconds": 15
+ },
+ "pollSeconds": 60,
+ "teams": [
+  {
+   "n": 1,
+   "name": "Porch Pounders",
+   "color": "#E5484D",
+   "logo": "logos/01-porch-pounders-row.png",
+   "rowH": 1,
+   "sgt": [
+    "MAFULLER",
+    "MRSABREE"
+   ]
+  },
+  {
+   "n": 2,
+   "name": "Stiffer Shafts",
+   "color": "#3D6BFF",
+   "logo": "logos/02-stiffer-shafts-row.png",
+   "rowH": 1,
+   "sgt": [
+    "GATOR931",
+    "JISBRANDT"
+   ]
+  },
+  {
+   "n": 3,
+   "name": "Over par and under the influence",
+   "color": "#A66BFF",
+   "logo": "logos/03-over-par-and-under-the-influence-row.png",
+   "rowH": 1,
+   "sgt": [
+    "MLASPISA",
+    "NICKDAMA"
+   ]
+  },
+  {
+   "n": 4,
+   "name": "GolfMafia17",
+   "color": "#2EA15E",
+   "logo": "logos/04-golfmafia17-row.png",
+   "rowH": 1.15,
+   "sgt": [
+    "BRIANKEALLY",
+    "TONYSTAZZONE"
+   ]
+  },
+  {
+   "n": 5,
+   "name": "ModeloBros",
+   "color": "#A3E048",
+   "logo": "logos/05-modelobros-row.png",
+   "rowH": 1,
+   "sgt": [
+    "DBOLLI1",
+    "JTENORIO09"
+   ]
+  },
+  {
+   "n": 6,
+   "name": "Free agents",
+   "color": "#F4F1E8",
+   "logo": "logos/06-free-agents-row.png",
+   "rowH": 1,
+   "sgt": [
+    "JOEWATERSON",
+    "PAULH0470"
+   ]
+  },
+  {
+   "n": 7,
+   "name": "The Whiskey Whisperers",
+   "color": "#D2803A",
+   "logo": "logos/07-the-whiskey-whisperers-row.png",
+   "rowH": 1,
+   "sgt": [
+    "MARCCONSTANTINOJOHNSON",
+    "TYLERJOHNSON5"
+   ]
+  },
+  {
+   "n": 8,
+   "name": "Broski Golf",
+   "color": "#22D3EE",
+   "logo": "logos/08-broski-golf-row.png",
+   "rowH": 1.3,
+   "sgt": [
+    "BANNER",
+    "BROSKIGOLF"
+   ]
+  },
+  {
+   "n": 9,
+   "name": "Bedtime Blitz",
+   "color": "#C3B4FF",
+   "logo": "logos/09-bedtime-blitz-row.png",
+   "rowH": 1,
+   "sgt": [
+    "EDAMORE",
+    "NPOSSLEY"
+   ]
+  },
+  {
+   "n": 10,
+   "name": "Designated Drivers",
+   "color": "#FFE14D",
+   "logo": "logos/10-designated-drivers-row.png",
+   "rowH": 1,
+   "sgt": [
+    "ABOYER6",
+    "DWAGNER20"
+   ]
+  },
+  {
+   "n": 11,
+   "name": "Rip it and Sip it",
+   "color": "#FF7A1A",
+   "logo": "logos/11-rip-it-and-sip-it-row.png",
+   "rowH": 1.3,
+   "sgt": [
+    "GUYHERNADEZ82",
+    "JAMESKEARBEY",
+    "JAMESKEARBEY63"
+   ]
+  },
+  {
+   "n": 12,
+   "name": "Bro Beans",
+   "color": "#C08A5B",
+   "logo": "logos/12-bro-beans-row.png",
+   "rowH": 1,
+   "sgt": [
+    "BOONETOWN",
+    "RRANDAZZO"
+   ]
+  },
+  {
+   "n": 13,
+   "name": "Team Cheeze",
+   "color": "#FFB627",
+   "logo": "logos/13-team-cheeze-row.png",
+   "rowH": 1,
+   "sgt": [
+    "CHUCKSTR",
+    "JOHNOBERHEIDE1",
+    "JOHNOBERHEIDE"
+   ]
+  },
+  {
+   "n": 14,
+   "name": "Stiff Shafts",
+   "color": "#A9B4BF",
+   "logo": "logos/14-stiff-shafts-row.png",
+   "rowH": 1,
+   "sgt": [
+    "DALESWETMAN",
+    "JOSHSWETMAN"
+   ]
+  },
+  {
+   "n": 15,
+   "name": "Bastos off the tee",
+   "color": "#20C4B0",
+   "logo": "logos/15-bastos-off-the-tee-row.png",
+   "rowH": 1,
+   "sgt": [
+    "JOEYU",
+    "PATRICKSCHILL"
+   ]
+  },
+  {
+   "n": 16,
+   "name": "BCU OG’s",
+   "color": "#D7BD8B",
+   "logo": "logos/16-bcu-ogs-row.png",
+   "rowH": 1,
+   "sgt": [
+    "AUSTYFROSTY",
+    "CADENPETE"
+   ]
+  },
+  {
+   "n": 17,
+   "name": "Brothers From Other Mothers",
+   "color": "#5CB8FF",
+   "logo": "logos/17-brothers-from-other-mothers-row.png",
+   "rowH": 1,
+   "sgt": [
+    "CGASSAWAY",
+    "JOSHGORDON11"
+   ]
+  },
+  {
+   "n": 18,
+   "name": "Bogey Bros",
+   "color": "#9CAF5A",
+   "logo": "logos/18-bogey-bros-row.png",
+   "rowH": 1,
+   "sgt": [
+    "BIGDOG744",
+    "MIKEAITES"
+   ]
+  },
+  {
+   "n": 19,
+   "name": "3 Putters",
+   "color": "#E05CE0",
+   "logo": "logos/19-3-putters-row.png",
+   "rowH": 1.1,
+   "sgt": [
+    "ARB"
+   ]
+  },
+  {
+   "n": 20,
+   "name": "Driver? I barely know her...",
+   "color": "#FF5CAA",
+   "logo": "logos/20-driver-i-barely-know-her-row.png",
+   "rowH": 1.3,
+   "sgt": [
+    "JRGREAVES18",
+    "TAGREEN84"
+   ]
+  },
+  {
+   "n": 21,
+   "name": "2 Dads 1 Bay",
+   "color": "#86EFC6",
+   "logo": "logos/21-2-dads-1-bay-row.png",
+   "rowH": 1,
+   "sgt": [
+    "BRANDONS",
+    "CHADBAKER"
+   ]
+  },
+  {
+   "n": 22,
+   "name": "Strip Tees",
+   "color": "#FF8C69",
+   "logo": "logos/22-strip-tees-row.png",
+   "rowH": 1,
+   "sgt": [
+    "MMARTIN",
+    "SPADESKLZ"
+   ]
+  },
+  {
+   "n": 23,
+   "name": "Pinch-e- Putters",
+   "color": "#4ADE6A",
+   "logo": "logos/23-pinch-e-putters-row.png",
+   "rowH": 1.25,
+   "sgt": [
+    "RAMONEYY",
+    "ULY_PINEDO",
+    "RAMONEY",
+    "ULYYSSS"
+   ]
+  },
+  {
+   "n": 24,
+   "name": "Pin Chasing Pav’s",
+   "color": "#8B74FF",
+   "logo": "logos/24-pin-chasing-pavs-row.png",
+   "rowH": 1.12,
+   "sgt": [
+    "NATPAV",
+    "NICKPAV"
+   ]
+  },
+  {
+   "n": 25,
+   "name": "I’m Gonna Shoooooot... Under Par!",
+   "color": "#A8E6FF",
+   "logo": "logos/25-im-gonna-shoot-under-par-row.png",
+   "rowH": 1,
+   "sgt": [
+    "BOSSBIRDIE",
+    "JTBRADSHAW"
+   ]
+  }
+ ]
+}
