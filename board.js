@@ -107,14 +107,14 @@
         if (!users.length) return;
         var toPar = null, thru = null;
         [].forEach.call(tr.cells, function (c) {
-          var m = c.textContent.replace(/\s+/g, ' ').trim().match(/^([+-]?\d+|E)\s+(?:THRU\s*)?\*?(F|\d{1,2})\*?$/i);
-          if (m) { toPar = m[1].toUpperCase() === 'E' ? 0 : Number(m[1]); thru = m[2].toUpperCase(); }
+          var m = c.textContent.replace(/\s+/g, ' ').trim().match(/^([+-]?\d+|E)(?:\s+(?:THRU\s*)?\*?(F|\d{1,2})\*?|\s*\(\s*(F|\d{1,2})\s*\))$/i);
+          if (m) { toPar = m[1].toUpperCase() === 'E' ? 0 : Number(m[1]); thru = (m[2] || m[3]).toUpperCase(); }
         });
         if (toPar === null) {
           var tot = tr.cells[tr.cells.length - 1].textContent.trim().toUpperCase();
           if (/^([+-]?\d+|E)$/.test(tot)) toPar = tot === 'E' ? 0 : Number(tot);
         }
-        var playing = /playing/i.test(tr.className) || (thru !== null && thru !== 'F');
+        var playing = /playing|in-progress/i.test(tr.className) || (thru !== null && thru !== 'F');
         if (toPar === null && !playing) return;
         var team = teamFor(users);
         var row = { users: users, toPar: toPar, thru: thru || (playing ? '' : 'F'), playing: playing, team: team || null, k: team ? 't' + team.n : 'u' + key(users.join('/')) };
