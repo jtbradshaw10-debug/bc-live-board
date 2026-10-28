@@ -96,7 +96,7 @@
         if (!users.length) return;
         var toPar = null, thru = null;
         [].forEach.call(tr.cells, function (c) {
-          var m = c.textContent.replace(/\s+/g, ' ').trim().match(/^([+-]?\d+|E)\s+\*?(F|\d{1,2})\*?$/i);
+          var m = c.textContent.replace(/\s+/g, ' ').trim().match(/^([+-]?\d+|E)\s+(?:THRU\s*)?\*?(F|\d{1,2})\*?$/i);
           if (m) { toPar = m[1].toUpperCase() === 'E' ? 0 : Number(m[1]); thru = m[2].toUpperCase(); }
         });
         if (toPar === null) {
@@ -206,7 +206,7 @@
     '#bclive .row .thru{font-weight:600;font-size:26px;text-align:center;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px;font-variant-numeric:tabular-nums}',
     '#bclive .row .thru.on{color:var(--bone)}',
     '#bclive .row .thru .live{width:9px;height:9px}',
-    '#bclive .row.wait .team{opacity:.38}',
+    '#bclive .row.wait .team,#bclive .row.wait .pos{opacity:.38}',
     '#bclive .row .mv{font-weight:700;font-size:19px;font-variant-numeric:tabular-nums;white-space:nowrap}',
     '#bclive .row .mv.up{color:var(--brass)}#bclive .row .mv.dn{color:var(--red)}',
     '#bclive .row.fresh::after{content:"";position:absolute;inset:0;border-left:4px solid var(--brass);background:linear-gradient(90deg,rgba(215,189,139,.16),rgba(215,189,139,0) 70%);animation:bcfade 12s ease-out forwards;pointer-events:none}',
