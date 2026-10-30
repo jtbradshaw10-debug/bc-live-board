@@ -89,16 +89,61 @@
         list.push({ id: id, title: title, week: wk, course: course, date: date, past: section === 'past' });
       });
       if (!list.length) throw new Error('No events found on SGT');
-      var pick = null;
-      if (OPTS.event) pick = list.find(function (e) { return e.id === OPTS.event; });
-      if (!pick) {
-        var t = new Date(); t.setHours(0, 0, 0, 0);
-        var open = list.filter(function (e) { return !e.past && e.date >= t; }).sort(function (a, b) { return a.date - b.date; });
-        pick = open[0] || list.filter(function (e) { return e.past || e.date < t; }).sort(function (a, b) { return b.date - a.date; })[0] || list[0];
-      }
-      pick.final = pick.past || pick.date < new Date();
-      return pick;
+      var finish = function (p) { p.final = p.past || p.date < new Date(); return p; };
+      var forced = OPTS.event && list.find(function (e) { return e.id === OPTS.event; });
+      if (forced) return finish(forced);
+      var t = new Date(); t.setHours(0, 0, 0, 0);
+      var open = list.filter(function (e) { return !e.past && e.date >= t; });
+      return Promise.all(open.map(function (e) { return eventStart(e.id).then(function (s) { e.start = s; }); }))
+        .then(function () { return finish(pickWeek(list, new Date())); });
     });
+  }
+
+  // League weeks run Monday–Sunday. SGT keeps each week's event open a couple of days past Sunday,
+  // so the new week opens (Monday) while last week is still listed. The current week is the newest
+  // event that has opened; before any has opened, the next one up; with nothing open, the latest past one.
+  function pickWeek(list, at) {
+    var t = new Date(at); t.setHours(0, 0, 0, 0);
+    var open = list.filter(function (e) { return !e.past && e.date >= t; });
+    var pick;
+    if (open.length && open.every(function (e) { return e.start; })) {
+      pick = open.filter(function (e) { return e.start <= at; }).sort(function (a, b) { return b.start - a.start; })[0] ||
+        open.slice().sort(function (a, b) { return a.start - b.start; })[0];
+    } else {
+      pick = open.slice().sort(function (a, b) { return a.date - b.date; })[0]; // start dates unreadable: soonest to close
+    }
+    return pick || list.filter(function (e) { return e.past || e.date < t; }).sort(function (a, b) { return b.date - a.date; })[0] || list[0];
+  }
+
+  // An event's opening day, read once from its SGT page ("October 26 - November 3, 2026").
+  var STARTS = {};
+  var MONTHS = 'january february march april may june july august september october november december'.split(' ');
+  function mon(s) {
+    s = String(s || '').toLowerCase();
+    for (var i = 0; i < 12; i++) if (s === MONTHS[i] || s === MONTHS[i].slice(0, 3) || (i === 8 && s === 'sept')) return i;
+    return -1;
+  }
+  function parseStart(txt) {
+    var re = /\b([A-Z][a-z]+)\s+(\d{1,2})(?:,\s*(\d{4}))?\s*[-–]\s*(?:([A-Z][a-z]+)\s+)?(\d{1,2}),\s*(\d{4})/g, m;
+    while ((m = re.exec(txt))) {
+      if (mon(m[1]) < 0 || (m[4] && mon(m[4]) < 0)) continue;
+      var y = Number(m[3] || m[6]);
+      if (!m[3] && m[4] && mon(m[4]) < mon(m[1])) y -= 1; // Dec 28 - Jan 4, 2027
+      return new Date(y, mon(m[1]), Number(m[2]), 0, 0, 0);
+    }
+    return null;
+  }
+  function eventStart(id) {
+    if (id in STARTS) return Promise.resolve(STARTS[id]);
+    return fetch('/tournament/' + id, { credentials: 'include', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) {
+        if (!html) return null;
+        var s = parseStart(parse(html).body.textContent.replace(/\s+/g, ' '));
+        STARTS[id] = s;
+        return s;
+      })
+      .catch(function () { return null; });
   }
 
   function loadWeek(ev) {
