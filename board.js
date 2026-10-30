@@ -3,14 +3,15 @@
  *
  * Runs ON simulatorgolftour.com (injected by Fully Kiosk, or a bookmark in a logged-in browser),
  * so it can read SGT's own leaderboard with that screen's SGT login. It hides SGT's page, draws the
- * Birdie board, re-checks SGT every 60 s, and alternates between this week (live) and the season.
+ * Birdie board, re-checks SGT every 60 s, and shows this week's live leaderboard only.
+ * It moves to the next week (and its course) on its own once SGT's event for the week ends.
  *
  * Broadcast touches: rows glide to their new spots, changed scores tick to the new number,
  * a "Just posted" banner runs when a team finishes, and reloads paint instantly from a cache.
  *
  * Only activates when the address has #bclive. Optional extras after it, e.g.
  *   #bclive&event=78792   force a specific SGT event
- *   #bclive&view=week     stay on one view (week | season)
+ *   #bclive&view=season   show SGT's season standings instead of this week (not used on the TV)
  * Data (teams, colors, SGT usernames): league.json next to this file.
  */
 (function () {
@@ -23,7 +24,8 @@
   var BASE = SELF ? SELF.replace(/[^/]*(\?.*)?$/, '') : 'https://jtbradshaw10-debug.github.io/bc-live-board/';
   var OPTS = {};
   location.hash.replace(/^#/, '').split('&').forEach(function (kv) { var p = kv.split('='); if (p[0]) OPTS[p[0].toLowerCase()] = decodeURIComponent(p[1] || ''); });
-  var FIXED = OPTS.view === 'week' || OPTS.view === 'season' ? OPTS.view : null;
+  // This week only — no rotation to season standings.
+  var FIXED = OPTS.view === 'season' ? 'season' : 'week';
 
   var W = 1920, H = 1080, GAP = 44;
   var CACHE_KEY = 'bclive-cache-v2';
@@ -154,7 +156,7 @@
   function refresh() {
     return loadEvents()
       .then(function (ev) {
-        return Promise.all([loadWeek(ev), loadSeason()]).then(function (res) {
+        return Promise.all([loadWeek(ev), FIXED === 'season' ? loadSeason() : null]).then(function (res) {
           var wk = res[0], fin = {};
           wk.rows.forEach(function (r) { if (!r.waiting && !r.playing && r.toPar !== null && r.thru === 'F') fin[r.k] = 1; });
           var prev = state.finished && state.finished.eventId === ev.id ? state.finished.keys : null;
