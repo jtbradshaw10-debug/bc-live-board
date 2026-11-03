@@ -14,7 +14,7 @@
  *   #bclive&view=season   show SGT's season standings instead of this week (not used on the TV)
  * Data (teams, colors, SGT usernames): league.json next to this file.
  */
-(function () {
+(function bcliveMain() {
   'use strict';
   if (window.__bcLive) return;
   if (!/bclive/i.test(location.hash)) return;
@@ -563,13 +563,18 @@
   }
 
   // ---------- updates without a visible reload ----------
-  var codeHash = null;
+  // Compares the published board with the code actually running (not with the first copy fetched),
+  // so a TV that started on a cached older copy still notices and moves to the new one.
+  function latestCode() {
+    return fetch(BASE + 'board.js?_=' + now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : null; });
+  }
+  function isNewer(t) {
+    var a = t ? t.indexOf('function bcliveMain') : -1, b = t ? t.lastIndexOf('})()') : -1;
+    return a >= 0 && b > a && hash(t.slice(a, b + 1)) !== hash(String(bcliveMain));
+  }
   function checkForUpdates() {
-    fetch(BASE + 'board.js?_=' + now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : null; }).then(function (t) {
-      if (!t) return;
-      var h = hash(t);
-      if (codeHash === null) codeHash = h;
-      else if (h !== codeHash && !showing) { saveCache(); location.reload(); }
+    latestCode().then(function (t) {
+      if (isNewer(t) && !showing) { saveCache(); location.reload(); }
     }).catch(function () {});
     fetch(BASE + 'league.json?_=' + now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : null; }).then(function (t) {
       if (t && t !== LEAGUE_TXT) { setLeague(JSON.parse(t), t); refresh(); }
@@ -623,5 +628,16 @@
       });
   }
 
-  if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot);
+  // Always start on the newest board: the TV's loader link can hand back a cached older copy for a
+  // few minutes after an update, so check first and hand off to the latest copy if this one is behind.
+  function go() { if (document.body) boot(); else document.addEventListener('DOMContentLoaded', boot); }
+  if (window.__bcHandoff) go();
+  else latestCode().then(function (t) {
+    if (!isNewer(t)) return go();
+    window.__bcHandoff = 1; window.__bcLive = false;
+    var s = document.createElement('script');
+    s.src = BASE + 'board.js?_=' + now();
+    s.onerror = function () { window.__bcLive = true; go(); };
+    document.documentElement.appendChild(s);
+  }).catch(go);
 })();
