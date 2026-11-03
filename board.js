@@ -38,6 +38,11 @@
   var fmt = function (v) { return v === 0 ? 'E' : v > 0 ? '+' + v : String(v); };
   var dot = function () { return [].slice.call(arguments).filter(Boolean).join(' · '); };
   var parse = function (html) { return new DOMParser().parseFromString(html, 'text/html'); };
+  // Leaderboard text, with typographic minus signs/dashes made plain so "−2 (5)" reads like "-2 (5)".
+  var clean = function (s) { return String(s || '').replace(/[\u2212\u2012\u2013\u2014\uFE63\uFF0D]/g, '-').replace(/\s+/g, ' ').trim(); };
+  // A score with holes played: "-2 7", "-2 THRU 7", "-3 *12*", "E (1)", "+1 (THRU 3)", "-4 F".
+  var SCORE_THRU = /^([+-]?\d+|E)(?:\s+(?:THRU\s*)?\*?(F|\d{1,2})\*?|\s*\(\s*(?:THRU\s*)?(F|\d{1,2})\s*\))$/i;
+  var LIVE_ROW = /playing|in-?progress|on-?course/i;
   var now = function () { return Date.now(); };
   var hash = function (s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return h + ':' + s.length; };
   var setText = function (el, t) { t = String(t); if (el._t !== t) { el._t = t; el.textContent = t; } };
@@ -102,16 +107,25 @@
   // League weeks run Monday–Sunday. SGT keeps each week's event open a couple of days past Sunday,
   // so the new week opens (Monday) while last week is still listed. The current week is the newest
   // event that has opened; before any has opened, the next one up; with nothing open, the latest past one.
+  // An event's opening day comes from its SGT page when that reads sensibly, otherwise from the league
+  // calendar (its close date, back 3 days, back to Monday), so a failed or odd page read can never
+  // park the board on last week's finished results.
+  var DAY = 864e5;
+  function mondayOf(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  function opensOn(e) {
+    if (!e.date || isNaN(e.date)) return null;
+    var s = e.start;
+    if (s && !isNaN(s) && s <= e.date && e.date - s <= 12 * DAY) return s;
+    return mondayOf(new Date(e.date.getTime() - 3 * DAY));
+  }
   function pickWeek(list, at) {
     var t = new Date(at); t.setHours(0, 0, 0, 0);
     var open = list.filter(function (e) { return !e.past && e.date >= t; });
-    var pick;
-    if (open.length && open.every(function (e) { return e.start; })) {
-      pick = open.filter(function (e) { return e.start <= at; }).sort(function (a, b) { return b.start - a.start; })[0] ||
-        open.slice().sort(function (a, b) { return a.start - b.start; })[0];
-    } else {
-      pick = open.slice().sort(function (a, b) { return a.date - b.date; })[0]; // start dates unreadable: soonest to close
-    }
+    open.forEach(function (e) { e.opens = opensOn(e); });
+    var newest = function (a, b) { return (b.opens - a.opens) || ((b.week || 0) - (a.week || 0)) || (b.date - a.date); };
+    var pick = open.filter(function (e) { return e.opens && e.opens <= at; }).sort(newest)[0] ||
+      open.filter(function (e) { return e.opens; }).sort(function (a, b) { return a.opens - b.opens; })[0] ||
+      open.slice().sort(function (a, b) { return a.date - b.date; })[0];
     return pick || list.filter(function (e) { return e.past || e.date < t; }).sort(function (a, b) { return b.date - a.date; })[0] || list[0];
   }
 
@@ -140,7 +154,7 @@
       .then(function (html) {
         if (!html) return null;
         var s = parseStart(parse(html).body.textContent.replace(/\s+/g, ' '));
-        STARTS[id] = s;
+        if (s) STARTS[id] = s; // a miss is retried next poll, not remembered
         return s;
       })
       .catch(function () { return null; });
@@ -149,19 +163,30 @@
   function loadWeek(ev) {
     return sgt('/sgt-api/leaderboard/' + ev.id + '/net').then(function (html) {
       var d = parse(html), byTeam = {}, extra = [];
+      var heads = [].map.call(d.querySelectorAll('table.leaderboard-table thead th'), function (th) { return clean(th.textContent).toUpperCase(); });
+      var thruCol = heads.indexOf('THRU');
+      var parCol = heads.findIndex(function (h) { return /^(TO PAR|NET|SCORE)$/.test(h); });
       [].forEach.call(d.querySelectorAll('table.leaderboard-table tbody tr'), function (tr) {
         var users = [].map.call(tr.querySelectorAll('td.player a[href*="/profile/"]'), function (a) { return a.textContent.trim(); }).filter(Boolean);
         if (!users.length) return;
         var toPar = null, thru = null;
         [].forEach.call(tr.cells, function (c) {
-          var m = c.textContent.replace(/\s+/g, ' ').trim().match(/^([+-]?\d+|E)(?:\s+(?:THRU\s*)?\*?(F|\d{1,2})\*?|\s*\(\s*(F|\d{1,2})\s*\))$/i);
+          var m = clean(c.textContent).match(SCORE_THRU);
           if (m) { toPar = m[1].toUpperCase() === 'E' ? 0 : Number(m[1]); thru = (m[2] || m[3]).toUpperCase(); }
         });
+        if (thru === null && thruCol >= 0 && tr.cells[thruCol]) {
+          var tc = clean(tr.cells[thruCol].textContent).toUpperCase().replace(/^THRU\s*/, '').replace(/[*()]/g, '').trim();
+          if (/^(F|\d{1,2})$/.test(tc)) thru = tc;
+        }
+        if (toPar === null && parCol >= 0 && tr.cells[parCol]) {
+          var pc = clean(tr.cells[parCol].textContent).toUpperCase();
+          if (/^([+-]?\d+|E)$/.test(pc)) toPar = pc === 'E' ? 0 : Number(pc);
+        }
         if (toPar === null) {
-          var tot = tr.cells[tr.cells.length - 1].textContent.trim().toUpperCase();
+          var tot = clean(tr.cells[tr.cells.length - 1].textContent).toUpperCase();
           if (/^([+-]?\d+|E)$/.test(tot)) toPar = tot === 'E' ? 0 : Number(tot);
         }
-        var playing = /playing|in-progress/i.test(tr.className) || (thru !== null && thru !== 'F');
+        var playing = LIVE_ROW.test(tr.className) || !!tr.querySelector('[class*="in-progress"],[class*="inprogress"]') || (thru !== null && thru !== 'F');
         if (toPar === null && !playing) return;
         var team = teamFor(users);
         var row = { users: users, toPar: toPar, thru: thru || (playing ? '' : 'F'), playing: playing, team: team || null, k: team ? 't' + team.n : 'u' + key(users.join('/')) };
