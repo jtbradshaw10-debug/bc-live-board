@@ -86,9 +86,8 @@
         if (el.tagName === 'H2') { section = /past/i.test(el.textContent) ? 'past' : 'active'; return; }
         var a = el.querySelector('a[href*="/tournament/"]'); if (!a) return;
         var id = (a.getAttribute('href').match(/tournament\/(\d+)/) || [])[1];
-        var title = ((el.querySelector('.text-sgt-white.text-uppercase') || {}).textContent || '').trim();
-        var dateTxt = ((el.querySelector('.text-nowrap') || {}).textContent || '').trim();
-        var date = new Date(dateTxt + ' 23:59:59');
+        var title = cardTitle(el);
+        var date = cardDate(el);
         var wk = Number((title.match(/week\s*(\d+)/i) || [])[1]) || null;
         var course = title.replace(/^.*?week\s*\d+\s*[-–—:]\s*/i, '').replace(/,\s*[A-Z]{2}$/, '').trim();
         list.push({ id: id, title: title, week: wk, course: course, date: date, past: section === 'past' });
@@ -98,7 +97,7 @@
       var forced = OPTS.event && list.find(function (e) { return e.id === OPTS.event; });
       if (forced) return finish(forced);
       var t = new Date(); t.setHours(0, 0, 0, 0);
-      var open = list.filter(function (e) { return !e.past && e.date >= t; });
+      var open = list.filter(function (e) { return isOpen(e, t); });
       return Promise.all(open.map(function (e) { return eventStart(e.id).then(function (s) { e.start = s; }); }))
         .then(function () { return finish(pickWeek(list, new Date())); });
     });
@@ -112,21 +111,43 @@
   // park the board on last week's finished results.
   var DAY = 864e5;
   function mondayOf(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  // SGT restyles its event cards now and then (Nov 2026 moved the title to .event-card-name and the
+  // date to .event-date, "ENDS Nov 23, 2026"), so each field is read several ways before giving up.
+  function cardTitle(el) {
+    var n = el.querySelector('.event-card-name, .text-sgt-white.text-uppercase');
+    var t = n ? n.textContent : '';
+    if (!/week\s*\d+/i.test(t)) {
+      [].some.call(el.querySelectorAll('a, [aria-label]'), function (x) {
+        var s = /week\s*\d+/i.test(x.textContent) ? x.textContent : (x.getAttribute('aria-label') || '').replace(/\s*leaderboard\s*$/i, '');
+        if (/week\s*\d+/i.test(s)) { t = s; return true; }
+      });
+    }
+    return clean(t);
+  }
+  function cardDate(el) {
+    var n = el.querySelector('.event-date, .text-nowrap');
+    var txt = ((n ? n.textContent : '') + ' ' + el.textContent).replace(/\s+/g, ' ');
+    var re = /\b([A-Za-z]{3,9})\.?\s+(\d{1,2}),\s*(\d{4})/g, m;
+    while ((m = re.exec(txt))) if (mon(m[1]) >= 0) return new Date(Number(m[3]), mon(m[1]), Number(m[2]), 23, 59, 59);
+    return new Date(NaN);
+  }
+  // An event SGT lists under "Active" counts as open even if its close date couldn't be read.
+  function isOpen(e, t) { return !e.past && (isNaN(e.date) || e.date >= t); }
   function opensOn(e) {
-    if (!e.date || isNaN(e.date)) return null;
+    if (!e.date || isNaN(e.date)) return e.start && !isNaN(e.start) ? e.start : null;
     var s = e.start;
     if (s && !isNaN(s) && s <= e.date && e.date - s <= 12 * DAY) return s;
     return mondayOf(new Date(e.date.getTime() - 3 * DAY));
   }
   function pickWeek(list, at) {
     var t = new Date(at); t.setHours(0, 0, 0, 0);
-    var open = list.filter(function (e) { return !e.past && e.date >= t; });
+    var open = list.filter(function (e) { return isOpen(e, t); });
     open.forEach(function (e) { e.opens = opensOn(e); });
     var newest = function (a, b) { return (b.opens - a.opens) || ((b.week || 0) - (a.week || 0)) || (b.date - a.date); };
     var pick = open.filter(function (e) { return e.opens && e.opens <= at; }).sort(newest)[0] ||
       open.filter(function (e) { return e.opens; }).sort(function (a, b) { return a.opens - b.opens; })[0] ||
       open.slice().sort(function (a, b) { return a.date - b.date; })[0];
-    return pick || list.filter(function (e) { return e.past || e.date < t; }).sort(function (a, b) { return b.date - a.date; })[0] || list[0];
+    return pick || list.filter(function (e) { return e.past || e.date < t; }).sort(function (a, b) { return (b.date - a.date) || ((b.week || 0) - (a.week || 0)); })[0] || list[0];
   }
 
   // An event's opening day, read once from its SGT page ("October 26 - November 3, 2026").
